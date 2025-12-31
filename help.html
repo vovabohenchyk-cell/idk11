@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<title>База розыска</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+<style>
+:root{
+  --bg:#0a0f16;
+  --card:#111827;
+  --line:#1f2937;
+  --neon:#22d3ee;
+  --danger:#ef4444;
+  --ok:#22c55e;
+  --text:#e5e7eb;
+  --muted:#9ca3af;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+  background: radial-gradient(1200px 600px at 10% -10%, #0b1220, var(--bg));
+  color:var(--text);
+}
+
+header{
+  position:sticky; top:0; z-index:10;
+  backdrop-filter: blur(10px);
+  background: linear-gradient(180deg, rgba(10,15,22,.9), rgba(10,15,22,.6));
+  border-bottom:1px solid var(--line);
+}
+.header-wrap{
+  max-width:1200px; margin:auto; padding:18px 20px;
+  display:flex; align-items:center; gap:16px;
+}
+.logo{
+  width:40px; height:40px; border-radius:10px;
+  background: conic-gradient(from 0deg, var(--neon), #60a5fa, var(--neon));
+  box-shadow: 0 0 30px rgba(34,211,238,.5);
+}
+h1{font-size:20px; margin:0; letter-spacing:.5px}
+small{color:var(--muted)}
+
+.container{max-width:1200px; margin:auto; padding:24px 20px}
+
+.disclaimer{
+  border:1px dashed #334155;
+  background: rgba(15,23,42,.6);
+  padding:14px 16px; border-radius:12px;
+  margin-bottom:20px; font-size:14px;
+}
+
+.search{
+  position:relative; margin-bottom:22px;
+}
+.search input{
+  width:100%; padding:14px 44px 14px 14px;
+  border-radius:14px; border:1px solid var(--line);
+  background:#0b1220; color:var(--text); font-size:16px;
+  outline:none;
+}
+.search span{
+  position:absolute; right:14px; top:50%; transform:translateY(-50%);
+  color:var(--muted)
+}
+
+.grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px,1fr));
+  gap:20px;
+}
+
+.card{
+  position:relative;
+  background: linear-gradient(180deg, #0f172a, var(--card));
+  border:1px solid var(--line);
+  border-radius:18px;
+  overflow:hidden;
+  cursor:pointer;
+  transform: translateY(10px);
+  opacity:0;
+  animation: appear .6s ease forwards;
+}
+.card::after{
+  content:"";
+  position:absolute; inset:0;
+  background: radial-gradient(400px 120px at -10% -20%, rgba(34,211,238,.15), transparent);
+  pointer-events:none;
+}
+.card:hover{
+  box-shadow: 0 20px 60px rgba(0,0,0,.6), inset 0 0 0 1px rgba(34,211,238,.3);
+  transform: translateY(-6px);
+  transition:.25s ease;
+}
+
+.card img{
+  width:100%; height:280px; object-fit:cover;
+  filter: grayscale(15%) contrast(1.05);
+}
+.card .body{padding:14px 16px}
+.name{font-weight:700; font-size:18px}
+.meta{color:var(--muted); font-size:14px; margin-top:4px}
+.reason{font-size:14px; margin-top:10px; line-height:1.4}
+
+.badge{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:6px 10px; border-radius:999px; font-size:13px; margin-top:12px;
+}
+.badge.wanted{background:rgba(239,68,68,.15); color:#fecaca}
+.badge.captured{background:rgba(34,197,94,.15); color:#bbf7d0}
+
+@keyframes appear{
+  to{opacity:1; transform:translateY(0)}
+}
+
+/* MODAL */
+.modal{
+  position:fixed; inset:0; display:none;
+  background: rgba(2,6,23,.75);
+  backdrop-filter: blur(8px);
+  align-items:center; justify-content:center; z-index:50;
+}
+.modal.open{display:flex}
+.modal-card{
+  width:min(820px, 92vw);
+  background: linear-gradient(180deg, #0b1220, #020617);
+  border:1px solid var(--line);
+  border-radius:22px;
+  overflow:hidden;
+  box-shadow: 0 40px 120px rgba(0,0,0,.8);
+  animation: pop .35s ease;
+}
+@keyframes pop{from{transform:scale(.96); opacity:0} to{transform:scale(1); opacity:1}}
+.modal-top{
+  display:grid; grid-template-columns: 320px 1fr;
+}
+.modal-top img{width:100%; height:100%; object-fit:cover}
+.modal-body{padding:22px}
+.modal h2{margin:0 0 8px}
+.kv{display:grid; grid-template-columns: 140px 1fr; gap:8px; font-size:14px}
+.kv div{color:var(--muted)}
+.close{
+  position:absolute; right:14px; top:14px;
+  background:#020617; border:1px solid var(--line);
+  color:var(--text); border-radius:10px; padding:8px 10px; cursor:pointer;
+}
+
+footer{
+  text-align:center; padding:28px; color:var(--muted); font-size:13px
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-wrap">
+    <div class="logo"></div>
+    <div>
+      <h1>База розыска</h1>
+      <small>Все данные</small>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+  <div class="disclaimer">
+    ⚠️ УВИДЕЛИ ЗВОНИТЬ В 102.
+  </div>
+
+  <div class="search">
+    <input id="search" placeholder="Поиск по ФИО..." />
+    <span>⌕</span>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<footer>DEMO UI • Анимации • Без реальных данных</footer>
+
+<div class="modal" id="modal">
+  <div class="modal-card">
+    <button class="close" onclick="closeModal()">✕</button>
+    <div class="modal-top">
+      <img id="mImg">
+      <div class="modal-body">
+        <h2 id="mName"></h2>
+        <div class="kv">
+          <div>Дата рождения</div><div id="mDob"></div>
+          <div>Статус</div><div id="mStatus"></div>
+          <div>Описание</div><div id="mReason"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const data = [
+ {name:"Кира Кушко", dob:"18.09.2009",
+  reason:"Шлюха которая не пьет крепкий алко",
+  status:"wanted", img:"https://i.imgur.com/zExJmor.png"},
+ {name:"Роговська Анастасея", dob:"14.10.2009",
+  reason:"Борзая пизда которая много ебется и не пьет крепкий алко",
+  status:"wanted", img:"https://i.imgur.com/6qCsyyS.jpeg"},
+ {name:"Нина Кошевая", dob:"01.10.2009",
+  reason:"Хуй знает просто слюха",
+  status:"captured", img:"https://i.imgur.com/3DWxWLU.png"},
+];
+
+const grid=document.getElementById('grid');
+const search=document.getElementById('search');
+
+function render(list){
+  grid.innerHTML='';
+  list.forEach((p,i)=>{
+    const el=document.createElement('div');
+    el.className='card';
+    el.style.animationDelay = (i*0.06)+'s';
+    el.innerHTML=`
+      <img src="${p.img}">
+      <div class="body">
+        <div class="name">${p.name}</div>
+        <div class="meta">Дата рождения: ${p.dob}</div>
+        <div class="reason">${p.reason}</div>
+        <div class="badge ${p.status}">
+          ${p.status==='wanted'?'В розыске':'Задержан'}
+        </div>
+      </div>`;
+    el.onclick=()=>openModal(p);
+    grid.appendChild(el);
+  });
+}
+
+function openModal(p){
+  modal.classList.add('open');
+  mImg.src=p.img; mName.textContent=p.name;
+  mDob.textContent=p.dob;
+  mStatus.textContent=p.status==='wanted'?'В розыске':'Задержан';
+  mReason.textContent=p.reason;
+}
+function closeModal(){ modal.classList.remove('open') }
+
+search.oninput=()=>{
+  const v=search.value.toLowerCase();
+  render(data.filter(p=>p.name.toLowerCase().includes(v)));
+};
+
+render(data);
+</script>
+
+</body>
+</html>
